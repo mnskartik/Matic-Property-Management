@@ -8,7 +8,12 @@ import Overview from "./pages/TenantDashboard/Overview";
 import MyRentals from "./pages/TenantDashboard/MyRentals";
 import Payments from "./pages/TenantDashboard/Payments";
 import Profile from "./pages/TenantDashboard/Profile";
-//import AgentDashboard from "./components/Dashboard/AgentDashboard";
+import AgentDashboard from "./pages/AgentDashboard";
+import AgentOverview from "./pages/AgentDashboard/Overview";
+import MyProperties from "./pages/AgentDashboard/MyProperties";
+import Leads from "./pages/AgentDashboard/Leads";
+import AgentProfile from "./pages/AgentDashboard/Profile";
+
 //import AdminDashboard from "./components/Dashboard/AdminDashboard";
 
 function App() {
@@ -33,30 +38,47 @@ function App() {
   return (
     <Router>
       <Routes>
+        {/* Public Routes */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
 
-        {/* Dashboards */}
+        {/* Tenant Dashboard */}
         <Route
-  path="/tenant/dashboard"
-  element={
-    <ProtectedRoute allowedRole="tenant">
-      <TenantDashboard />
-    </ProtectedRoute>
-  }
->
-  <Route path="overview" element={<Overview />} />
-  <Route path="rentals" element={<MyRentals />} />
-  <Route path="payments" element={<Payments />} />
-  <Route path="profile" element={<Profile />} />
-  <Route index element={<Navigate to="overview" replace />} />
-</Route>
-      
-       
+          path="/tenant/dashboard"
+          element={
+            <ProtectedRoute allowedRole="tenant">
+              <TenantDashboard />
+            </ProtectedRoute>
+          }
+        >
+          <Route path="overview" element={<Overview />} />
+          <Route path="rentals" element={<MyRentals />} />
+          <Route path="payments" element={<Payments />} />
+          <Route path="profile" element={<Profile />} />
+          <Route index element={<Navigate to="overview" replace />} />
+        </Route>
+
+        {/* Agent Dashboard */}
+        <Route
+          path="/agent/dashboard"
+          element={
+            <ProtectedRoute allowedRole="agent">
+              <AgentDashboard />
+            </ProtectedRoute>
+          }
+        >
+          <Route path="overview" element={<AgentOverview />} />
+          <Route path="properties" element={<MyProperties />} />
+          <Route path="leads" element={<Leads />} />
+          <Route path="profile" element={<AgentProfile />} />
+          <Route index element={<Navigate to="overview" replace />} />
+        </Route>
+
+        {/* Catch-all redirect */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   );
 }
-
 export default App;

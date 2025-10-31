@@ -15,7 +15,12 @@ const paymentRoutes = require('./routes/paymentRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
 
 const app = express();
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:3000", // your frontend origin
+    credentials: true, // allow cookies to be sent
+  })
+);
 app.use(express.json());
 app.use(morgan('dev'));
 

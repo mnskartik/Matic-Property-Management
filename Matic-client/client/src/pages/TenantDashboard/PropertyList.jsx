@@ -47,3 +47,4 @@ async function handleRequestRental(propertyId) {
     alert(err.response?.data?.message || "Failed to request rental");
   }
 }
+ 
