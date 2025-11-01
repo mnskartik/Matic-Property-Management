@@ -64,3 +64,28 @@ exports.getOverview = async (req, res) => {
 
 
 
+exports.updateRentalStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { paymentStatus } = req.body;
+
+    const rental = await Rental.findById(id).populate('propertyId');
+    if (!rental) return res.status(404).json({ message: 'Rental not found' });
+
+    // Only allow the agent who owns the property (or admin)
+    if (
+      req.user.role === 'agent' &&
+      rental.propertyId.agentId.toString() !== req.user._id.toString()
+    ) {
+      return res.status(403).json({ message: 'Not allowed' });
+    }
+
+    rental.paymentStatus = paymentStatus;
+    await rental.save();
+
+    res.json({ message: 'Rental updated', rental });
+  } catch (err) {
+    console.error('Error updating rental:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};

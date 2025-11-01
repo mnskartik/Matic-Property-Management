@@ -27,7 +27,7 @@ export default function Login() {
 
       // Role-based redirect
       if (user.role === "admin") {
-        window.location.href = "/admin/overview";
+        window.location.href = "/admin/dashboard";
       } else if (user.role === "agent") {
         window.location.href = "/agent/dashboard";
       } else {

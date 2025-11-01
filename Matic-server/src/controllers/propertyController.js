@@ -1,16 +1,21 @@
 const Property = require('../models/Property');
 
 exports.getAll = async (req, res) => {
-  // filter: only approved for public / tenants unless admin/agent requests
   const query = {};
-  // allow admin/agent to see all if query param includeAll=true
-  if (!req.user || (req.user && req.user.role === 'tenant')) {
+
+  if (!req.user) {
+    // Public users only see approved
     query.isApproved = true;
-  } else if (req.query.includeAll === 'true') {
-    // no filter
-  } else {
-    // agents/admins might want to see approved only by default
+  } else if (req.user.role === 'tenant') {
+    // Tenants only see approved
+    query.isApproved = true;
+  } else if (req.query.includeAll === 'true' && req.user.role === 'admin') {
+    // Admin sees all
+  } else if (req.user.role === 'agent') {
+    // Agents see only their own properties
+    query.agentId = req.user._id;
   }
+
   const props = await Property.find(query).populate('agentId', 'name email phone');
   res.json(props);
 };
@@ -59,4 +64,23 @@ exports.remove = async (req, res) => {
   }
   await prop.remove();
   res.json({ message: 'Property deleted' });
+};
+
+
+exports.toggleApproval = async (id, approved) => {
+  const prop = await Property.findById(id);
+  if (!prop) throw new Error("Property not found");
+  prop.isApproved = approved;
+  await prop.save();
+  return { message: "Property approval updated", isApproved: prop.isApproved };
+};
+
+exports.getPublic = async (req, res) => {
+  try {
+    const props = await Property.find({ isApproved: true })
+      .populate('agentId', 'name email phone');
+    res.json(props);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 };

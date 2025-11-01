@@ -70,6 +70,21 @@ export default function AgentDashboard() {
             <Users /> Leads
           </NavLink>
 
+
+          <NavLink
+  to="rentals"
+  className={({ isActive }) =>
+    `flex items-center gap-2 p-2 rounded-lg transition ${
+      isActive
+        ? "bg-blue-600 text-white"
+        : "hover:bg-blue-600 hover:text-white"
+    }`
+  }
+  onClick={() => setSidebarOpen(false)}
+>
+  <Building /> Rentals
+</NavLink>
+
           <NavLink
             to="profile"
             className={({ isActive }) =>

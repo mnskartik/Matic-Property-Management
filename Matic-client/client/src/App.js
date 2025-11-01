@@ -8,13 +8,21 @@ import Overview from "./pages/TenantDashboard/Overview";
 import MyRentals from "./pages/TenantDashboard/MyRentals";
 import Payments from "./pages/TenantDashboard/Payments";
 import Profile from "./pages/TenantDashboard/Profile";
+import PropertyList from "./pages/TenantDashboard/PropertyList";
 import AgentDashboard from "./pages/AgentDashboard";
 import AgentOverview from "./pages/AgentDashboard/Overview";
 import MyProperties from "./pages/AgentDashboard/MyProperties";
 import Leads from "./pages/AgentDashboard/Leads";
 import AgentProfile from "./pages/AgentDashboard/Profile";
+import Rentals from "./pages/AgentDashboard/Rentals";
 
-//import AdminDashboard from "./components/Dashboard/AdminDashboard";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminOverview from "./pages/AdminDashboard/Overview";
+
+import Reports from "./pages/AdminDashboard/Report";
+import ManageUsers from "./pages/AdminDashboard/Users";
+import ManageProperties from "./pages/AdminDashboard/Properties";
+
 
 function App() {
   const [role, setRole] = useState(null);
@@ -55,6 +63,7 @@ function App() {
           <Route path="overview" element={<Overview />} />
           <Route path="rentals" element={<MyRentals />} />
           <Route path="payments" element={<Payments />} />
+          <Route path="properties" element={<PropertyList />} />
           <Route path="profile" element={<Profile />} />
           <Route index element={<Navigate to="overview" replace />} />
         </Route>
@@ -72,8 +81,28 @@ function App() {
           <Route path="properties" element={<MyProperties />} />
           <Route path="leads" element={<Leads />} />
           <Route path="profile" element={<AgentProfile />} />
+          <Route path="rentals" element={<Rentals />} />
           <Route index element={<Navigate to="overview" replace />} />
         </Route>
+
+
+
+        {/* Admin Dashboard */}
+<Route
+  path="/admin/dashboard"
+  element={
+    <ProtectedRoute allowedRole="admin">
+      <AdminDashboard />
+    </ProtectedRoute>
+  }
+>
+  <Route path="overview" element={<AdminOverview />} />
+  <Route path="users" element={<ManageUsers />} />
+  <Route path="properties" element={<ManageProperties />} />
+  <Route path="reports" element={<Reports />} />
+  <Route index element={<Navigate to="overview" replace />} />
+</Route>
+
 
         {/* Catch-all redirect */}
         <Route path="*" element={<Navigate to="/" replace />} />

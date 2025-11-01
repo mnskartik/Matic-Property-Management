@@ -6,7 +6,8 @@ export default function PropertyList() {
 
   useEffect(() => {
     const fetchProps = async () => {
-      const res = await axios.get("http://localhost:5000/api/properties");
+      const res = await axios.get("http://localhost:5000/api/properties/public");
+
       setProperties(res.data);
     };
     fetchProps();
