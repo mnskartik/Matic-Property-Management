@@ -35,6 +35,10 @@ exports.getRentalsForAgent = async (req, res) => {
   const propIds = props.map(p => p._id);
   const rentals = await Rental.find({ propertyId: { $in: propIds } }).populate('propertyId tenantId');
   res.json(rentals);
+
+  console.log("Agent:", req.user._id);
+console.log("Agent properties:", props);
+
 };
 
 

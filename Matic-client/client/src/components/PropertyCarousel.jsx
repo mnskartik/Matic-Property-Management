@@ -37,6 +37,18 @@ const properties = [
     price: "₹2.3 Cr",
     img: "/assets/p6.jpg",
   },
+  {
+    id: 7,
+    title: "Penthouse in Hyderabad",
+    price: "₹4.0 Cr",
+    img: "/assets/p6.jpg",
+  },
+  {
+    id: 8,
+    title: "Cozy Cottage in Pune",
+    price: "₹1.5 Cr",
+    img: "/assets/p1.jpg",
+  }
 ];
 
 const PropertyCarousel = () => {

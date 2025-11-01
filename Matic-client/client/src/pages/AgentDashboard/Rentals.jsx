@@ -7,7 +7,7 @@ export default function Rentals() {
 
   const fetchRentals = async () => {
     try {
-      const res = await axiosInstance.get("/rentals/agent");
+      const res = await axiosInstance.get("api/rentals/agent");
       setRentals(res.data);
     } catch (err) {
       console.error("Error fetching rentals:", err);
