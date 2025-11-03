@@ -28,27 +28,41 @@ export default function MyProperties() {
     setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    try {
-      if (editId) {
-        // Update existing property
-        await axiosInstance.put(`/api/properties/${editId}`, form);
-        alert("Property updated successfully!");
-      } else {
-        // Add new property
-        await axiosInstance.post("/api/properties", form);
-        alert("Property added successfully!");
+  try {
+    const formData = new FormData();
+    formData.append("title", form.title);
+    formData.append("city", form.city);
+    formData.append("price", form.price);
+    formData.append("description", form.description);
+
+    if (form.images?.length) {
+      for (let img of form.images) {
+        formData.append("images", img);
       }
-
-      setForm({ title: "", city: "", price: "", description: "" });
-      setEditId(null);
-      fetchProperties();
-    } catch (err) {
-      console.error("Error submitting property:", err);
-      alert("Failed to save property!");
     }
-  };
+
+    if (editId) {
+      await axiosInstance.put(`/api/properties/${editId}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      alert("Property updated successfully!");
+    } else {
+      await axiosInstance.post("/api/properties", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      alert("Property added successfully!");
+    }
+
+    setForm({ title: "", city: "", price: "", description: "", images: [] });
+    setEditId(null);
+    fetchProperties();
+  } catch (err) {
+    console.error("Error submitting property:", err);
+    alert("Failed to save property!");
+  }
+};
 
   const handleDelete = async (id) => {
     if (window.confirm("Delete this property?")) {
@@ -113,6 +127,16 @@ export default function MyProperties() {
           className="border p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-400 md:col-span-2"
           required
         />
+        <input
+  type="file"
+  multiple
+  accept="image/*"
+  onChange={(e) => setForm({ ...form, images: Array.from(e.target.files) })}
+  className="border p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-400 md:col-span-2"
+/>
+
+
+
         <button
           type="submit"
           className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg py-2 px-4 transition-all md:col-span-2"
@@ -138,6 +162,14 @@ export default function MyProperties() {
               <p className="text-blue-600 font-bold mt-2">₹{p.price}</p>
               <p className="text-sm text-gray-600 mt-1 line-clamp-3">
                 {p.description}
+              {p.images && p.images.length > 0 && (
+  <img
+    src={`http://localhost:5000${p.images[0]}`}
+    alt={p.title}
+    className="w-full h-40 object-cover rounded mb-3"
+  />
+)}
+
               </p>
 
               <div className="flex justify-between items-center mt-4 text-sm">

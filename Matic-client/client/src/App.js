@@ -8,6 +8,7 @@ import Overview from "./pages/TenantDashboard/Overview";
 import MyRentals from "./pages/TenantDashboard/MyRentals";
 import Payments from "./pages/TenantDashboard/Payments";
 import Profile from "./pages/TenantDashboard/Profile";
+import LeadTen from "./pages/TenantDashboard/LeadTen";
 import PropertyList from "./pages/TenantDashboard/PropertyList";
 import AgentDashboard from "./pages/AgentDashboard";
 import AgentOverview from "./pages/AgentDashboard/Overview";
@@ -64,6 +65,7 @@ function App() {
           <Route path="rentals" element={<MyRentals />} />
           <Route path="payments" element={<Payments />} />
           <Route path="properties" element={<PropertyList />} />
+          <Route path="leadten" element={<LeadTen />} />
           <Route path="profile" element={<Profile />} />
           <Route index element={<Navigate to="overview" replace />} />
         </Route>

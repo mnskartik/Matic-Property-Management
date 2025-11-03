@@ -1,5 +1,14 @@
 const Property = require('../models/Property');
 
+
+
+
+
+
+
+
+
+
 exports.getAll = async (req, res) => {
   const query = {};
 
@@ -30,40 +39,89 @@ exports.getById = async (req, res) => {
 };
 
 exports.create = async (req, res) => {
-  // agent creates -> isApproved default false (pending)
-  const data = req.body;
-  data.agentId = req.user._id;
-  const prop = await Property.create(data);
-  res.status(201).json(prop);
+  try {
+    const data = req.body;
+    data.agentId = req.user._id;
+    data.images = req.files?.map((f) => `/uploads/${f.filename}`) || [];
+    data.isApproved = false; // agent's new listing pending approval
+
+    const prop = await Property.create(data);
+    res.status(201).json(prop);
+  } catch (err) {
+    console.error("Create property error:", err);
+    res.status(500).json({ message: "Error creating property", error: err.message });
+  }
 };
 
 exports.update = async (req, res) => {
-  const id = req.params.id;
-  const updates = req.body;
+  try {
+    const id = req.params.id;
+    const updates = req.body;
 
-  // agent can only update own property; admin can update any
-  const prop = await Property.findById(id);
-  if (!prop) return res.status(404).json({ message: 'Property not found' });
+    const prop = await Property.findById(id);
+    if (!prop) return res.status(404).json({ message: "Property not found" });
 
-  if (req.user.role === 'agent' && !prop.agentId.equals(req.user._id)) {
-    return res.status(403).json({ message: 'Not allowed to update this property' });
+    // Only owner agent can update own property
+    if (req.user.role === "agent" && !prop.agentId.equals(req.user._id)) {
+      return res.status(403).json({ message: "Not allowed to update this property" });
+    }
+
+    // If new images uploaded, append them to existing ones
+    if (req.files && req.files.length > 0) {
+      const newImages = req.files.map((f) => `/uploads/${f.filename}`);
+      prop.images = [...prop.images, ...newImages].slice(0, 5); // limit to 5
+    }
+
+    // Apply other updates (title, price, etc.)
+    Object.assign(prop, updates);
+
+    await prop.save();
+    res.json(prop);
+  } catch (err) {
+    console.error("Update property error:", err);
+    res.status(500).json({ message: "Error updating property", error: err.message });
   }
-
-  Object.assign(prop, updates);
-  await prop.save();
-  res.json(prop);
 };
 
 exports.remove = async (req, res) => {
-  const id = req.params.id;
-  const prop = await Property.findById(id);
-  if (!prop) return res.status(404).json({ message: 'Property not found' });
+  try {
+    const id = req.params.id;
+    const prop = await Property.findById(id);
+    if (!prop) return res.status(404).json({ message: "Property not found" });
 
-  if (req.user.role === 'agent' && !prop.agentId.equals(req.user._id)) {
-    return res.status(403).json({ message: 'Not allowed to delete this property' });
+    // Only allow owner agent or admin to delete
+    if (req.user.role === "agent" && !prop.agentId.equals(req.user._id)) {
+      return res.status(403).json({ message: "Not allowed to delete this property" });
+    }
+
+    // 🖼 Delete uploaded image files
+    if (prop.images && prop.images.length > 0) {
+      prop.images.forEach((imgPath) => {
+        const fullPath = path.join(__dirname, "..", imgPath);
+        if (fs.existsSync(fullPath)) {
+          try {
+            fs.unlinkSync(fullPath);
+          } catch (err) {
+            console.warn("Failed to delete image:", imgPath);
+          }
+        }
+      });
+    }
+
+    // 🧾 Delete all leads linked to this property
+    await Lead.deleteMany({ propertyId: id });
+
+    // 📄 Delete any rental requests linked to this property
+    await Rental.deleteMany({ propertyId: id });
+
+    // 🏠 Finally, delete the property itself
+    await Property.findByIdAndDelete(id);
+
+    res.json({ message: "Property and all related data deleted successfully" });
+  } catch (err) {
+    console.error("Delete error:", err);
+    res.status(500).json({ message: "Error deleting property", error: err.message });
   }
-  await prop.remove();
-  res.json({ message: 'Property deleted' });
 };
 
 

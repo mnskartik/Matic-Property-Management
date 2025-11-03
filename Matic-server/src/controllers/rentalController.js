@@ -3,20 +3,37 @@ const Property = require('../models/Property');
 
 // Tenant requests rental (for simplification we create rental record)
 exports.createRental = async (req, res) => {
-  const { propertyId, startDate, endDate, rentAmount } = req.body;
-  const property = await Property.findById(propertyId);
-  if (!property || !property.isApproved) return res.status(400).json({ message: 'Property not available' });
+  try {
+    const { propertyId } = req.body;
 
-  const rental = await Rental.create({
-    propertyId,
-    tenantId: req.user._id,
-    startDate,
-    endDate,
-    rentAmount,
-    paymentStatus: 'pending'
-  });
-  res.status(201).json(rental);
+    const property = await Property.findById(propertyId);
+    if (!property || !property.isApproved)
+      return res.status(400).json({ message: 'Property not available' });
+
+    // Auto-generate startDate = now and endDate = 30 days later
+    const startDate = new Date();
+    const endDate = new Date();
+    endDate.setDate(startDate.getDate() + 30);
+
+    // Default rentAmount = 25000
+    const rentAmount = 25000;
+
+    const rental = await Rental.create({
+      propertyId,
+      tenantId: req.user._id,
+      startDate,
+      endDate,
+      rentAmount,
+      paymentStatus: 'pending',
+    });
+
+    res.status(201).json(rental);
+  } catch (err) {
+    console.error('Error creating rental:', err);
+    res.status(500).json({ message: 'Server error while creating rental' });
+  }
 };
+
 
 // Tenant views own rentals
 exports.getMyRentals = async (req, res) => {
@@ -45,24 +62,32 @@ console.log("Agent properties:", props);
 
 
 // Tenant Dashboard Overview
-exports.getOverview = async (req, res) => {
+exports.getTenantOverview = async (req, res) => {
   try {
     const tenantId = req.user._id;
 
-    // Fetch total rentals, active ones, pending payments, etc.
+    // Fetch rentals for this tenant
     const rentals = await Rental.find({ tenantId });
-    const totalRentals = rentals.length;
-    const activeRentals = rentals.filter(r => r.paymentStatus === 'paid').length;
-    const pendingPayments = rentals.filter(r => r.paymentStatus === 'pending').length;
 
-    res.json({
-      totalRentals,
-      activeRentals,
-      pendingPayments
-    });
+    const activeRentals = rentals.filter(r => r.paymentStatus === "paid").length;
+
+    // Calculate total amount paid (sum of payments)
+    const payments = await Payment.aggregate([
+      { $match: { tenantId } },
+      { $group: { _id: null, totalPaid: { $sum: "$amount" } } },
+    ]);
+    const totalPaid = payments[0]?.totalPaid || 0;
+
+    // Calculate next due date (if any pending rental exists)
+    const nextDueRental = rentals.find(r => r.paymentStatus === "pending");
+    const nextDue = nextDueRental
+      ? new Date(nextDueRental.endDate).toLocaleDateString()
+      : "N/A";
+
+    res.json({ activeRentals, totalPaid, nextDue });
   } catch (err) {
-    console.error('Overview Error:', err);
-    res.status(500).json({ message: 'Server error while fetching overview' });
+    console.error("Tenant overview error:", err);
+    res.status(500).json({ message: "Error fetching tenant overview" });
   }
 };
 

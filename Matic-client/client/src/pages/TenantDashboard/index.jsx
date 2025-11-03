@@ -9,6 +9,7 @@ import {
   LogOut,
   Menu,
   X,
+  MessageCircle,
 } from "lucide-react";
 
 export default function TenantDashboard() {
@@ -62,6 +63,15 @@ export default function TenantDashboard() {
           >
             <Building size={20} /> Browse Properties
           </NavLink>
+
+          <NavLink
+            to="leadten"
+            className={navLinkClass}
+            onClick={() => setIsSidebarOpen(false)}
+          >
+            <MessageCircle size={20} /> My Enquiries
+          </NavLink>
+
 
           <NavLink
             to="rentals"

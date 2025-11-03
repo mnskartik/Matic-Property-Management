@@ -5,7 +5,7 @@ export default function Overview() {
   const [stats, setStats] = useState(null);
 
   useEffect(() => {
-    axiosInstance.get("/analytics/agent").then((res) => setStats(res.data));
+    axiosInstance.get("api/analytics/agent").then((res) => setStats(res.data));
   }, []);
 
   return (

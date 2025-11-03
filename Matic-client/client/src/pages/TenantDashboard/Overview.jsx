@@ -6,7 +6,7 @@ export default function Overview() {
 
   useEffect(() => {
     axiosInstance
-      .get("/rentals/overview")
+      .get("api/rentals/overview")
       .then((res) => setOverview(res.data))
       .catch(() => setOverview({ activeRentals: 0, totalPaid: 0, nextDue: "N/A" }));
   }, []);

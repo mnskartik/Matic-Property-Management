@@ -35,6 +35,8 @@ app.use('/api/leads', leadRoutes);
 app.use('/api/rentals', rentalRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use("/uploads", express.static("uploads"));
+
 
 // Error handler
 app.use(errorHandler);
