@@ -62,32 +62,24 @@ console.log("Agent properties:", props);
 
 
 // Tenant Dashboard Overview
-exports.getTenantOverview = async (req, res) => {
+exports.getOverview = async (req, res) => {
   try {
     const tenantId = req.user._id;
 
-    // Fetch rentals for this tenant
+    // Fetch total rentals, active ones, pending payments, etc.
     const rentals = await Rental.find({ tenantId });
+    const totalRentals = rentals.length;
+    const activeRentals = rentals.filter(r => r.paymentStatus === 'paid').length;
+    const pendingPayments = rentals.filter(r => r.paymentStatus === 'pending').length;
 
-    const activeRentals = rentals.filter(r => r.paymentStatus === "paid").length;
-
-    // Calculate total amount paid (sum of payments)
-    const payments = await Payment.aggregate([
-      { $match: { tenantId } },
-      { $group: { _id: null, totalPaid: { $sum: "$amount" } } },
-    ]);
-    const totalPaid = payments[0]?.totalPaid || 0;
-
-    // Calculate next due date (if any pending rental exists)
-    const nextDueRental = rentals.find(r => r.paymentStatus === "pending");
-    const nextDue = nextDueRental
-      ? new Date(nextDueRental.endDate).toLocaleDateString()
-      : "N/A";
-
-    res.json({ activeRentals, totalPaid, nextDue });
+    res.json({
+      totalRentals,
+      activeRentals,
+      pendingPayments
+    });
   } catch (err) {
-    console.error("Tenant overview error:", err);
-    res.status(500).json({ message: "Error fetching tenant overview" });
+    console.error('Overview Error:', err);
+    res.status(500).json({ message: 'Server error while fetching overview' });
   }
 };
 
