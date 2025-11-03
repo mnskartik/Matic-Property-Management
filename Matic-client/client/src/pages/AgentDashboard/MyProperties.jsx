@@ -5,9 +5,12 @@ export default function MyProperties() {
   const [properties, setProperties] = useState([]);
   const [form, setForm] = useState({
     title: "",
+    type: "",
     city: "",
     price: "",
+    amenities: "",
     description: "",
+    isApproved: false,
   });
   const [editId, setEditId] = useState(null); // Track which property is being edited
 
@@ -24,45 +27,67 @@ export default function MyProperties() {
     fetchProperties();
   }, []);
 
-  const handleChange = (e) =>
-    setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setForm({
+      ...form,
+      [name]: type === "checkbox" ? checked : value,
+    });
+  };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  try {
-    const formData = new FormData();
-    formData.append("title", form.title);
-    formData.append("city", form.city);
-    formData.append("price", form.price);
-    formData.append("description", form.description);
+    try {
+      const formData = new FormData();
+      formData.append("title", form.title);
+      formData.append("type", form.type);
+      formData.append("city", form.city);
+      formData.append("price", form.price);
+      formData.append("description", form.description);
+      formData.append("isApproved", form.isApproved);
+      formData.append(
+        "amenities",
+        form.amenities
+          ? form.amenities.split(",").map((a) => a.trim())
+          : []
+      );
 
-    if (form.images?.length) {
-      for (let img of form.images) {
-        formData.append("images", img);
+      if (form.images?.length) {
+        for (let img of form.images) {
+          formData.append("images", img);
+        }
       }
-    }
 
-    if (editId) {
-      await axiosInstance.put(`/api/properties/${editId}`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      alert("Property updated successfully!");
-    } else {
-      await axiosInstance.post("/api/properties", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      alert("Property added successfully!");
-    }
+      if (editId) {
+        await axiosInstance.put(`/api/properties/${editId}`, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        alert("Property updated successfully!");
+      } else {
+        await axiosInstance.post("/api/properties", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        alert("Property added successfully!");
+      }
 
-    setForm({ title: "", city: "", price: "", description: "", images: [] });
-    setEditId(null);
-    fetchProperties();
-  } catch (err) {
-    console.error("Error submitting property:", err);
-    alert("Failed to save property!");
-  }
-};
+      setForm({
+        title: "",
+        type: "",
+        city: "",
+        price: "",
+        amenities: "",
+        description: "",
+        isApproved: false,
+        images: [],
+      });
+      setEditId(null);
+      fetchProperties();
+    } catch (err) {
+      console.error("Error submitting property:", err);
+      alert("Failed to save property!");
+    }
+  };
 
   const handleDelete = async (id) => {
     if (window.confirm("Delete this property?")) {
@@ -76,9 +101,12 @@ export default function MyProperties() {
     setEditId(property._id);
     setForm({
       title: property.title,
+      type: property.type || "",
       city: property.city,
       price: property.price,
+      amenities: property.amenities ? property.amenities.join(", ") : "",
       description: property.description,
+      isApproved: property.isApproved || false,
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -103,6 +131,13 @@ export default function MyProperties() {
           required
         />
         <input
+          name="type"
+          placeholder="Property Type (e.g. Apartment, Villa)"
+          value={form.type}
+          onChange={handleChange}
+          className="border p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+        />
+        <input
           name="city"
           placeholder="City"
           value={form.city}
@@ -120,6 +155,13 @@ export default function MyProperties() {
           required
         />
         <input
+          name="amenities"
+          placeholder="Amenities (comma separated)"
+          value={form.amenities}
+          onChange={handleChange}
+          className="border p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-400 md:col-span-2"
+        />
+        <input
           name="description"
           placeholder="Description"
           value={form.description}
@@ -127,15 +169,24 @@ export default function MyProperties() {
           className="border p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-400 md:col-span-2"
           required
         />
+        <label className="flex items-center space-x-2 md:col-span-2">
+          <input
+            type="checkbox"
+            name="isApproved"
+            checked={form.isApproved}
+            onChange={handleChange}
+          />
+          <span className="text-gray-700">Approved</span>
+        </label>
         <input
-  type="file"
-  multiple
-  accept="image/*"
-  onChange={(e) => setForm({ ...form, images: Array.from(e.target.files) })}
-  className="border p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-400 md:col-span-2"
-/>
-
-
+          type="file"
+          multiple
+          accept="image/*"
+          onChange={(e) =>
+            setForm({ ...form, images: Array.from(e.target.files) })
+          }
+          className="border p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-400 md:col-span-2"
+        />
 
         <button
           type="submit"
@@ -158,19 +209,31 @@ export default function MyProperties() {
               <h3 className="text-xl font-semibold text-gray-800">
                 {p.title}
               </h3>
+              <p className="text-gray-500">{p.type}</p>
               <p className="text-gray-500">{p.city}</p>
               <p className="text-blue-600 font-bold mt-2">₹{p.price}</p>
               <p className="text-sm text-gray-600 mt-1 line-clamp-3">
                 {p.description}
-              {p.images && p.images.length > 0 && (
-  <img
-    src={`http://localhost:5000${p.images[0]}`}
-    alt={p.title}
-    className="w-full h-40 object-cover rounded mb-3"
-  />
-)}
-
               </p>
+              {p.amenities && p.amenities.length > 0 && (
+                <p className="text-xs text-gray-500 mt-1">
+                  Amenities: {p.amenities.join(", ")}
+                </p>
+              )}
+              <p
+                className={`mt-2 text-sm font-medium ${
+                  p.isApproved ? "text-green-600" : "text-yellow-600"
+                }`}
+              >
+                {p.isApproved ? "Approved" : "Pending Approval"}
+              </p>
+              {p.images && p.images.length > 0 && (
+                <img
+                  src={`http://localhost:5000${p.images[0]}`}
+                  alt={p.title}
+                  className="w-full h-40 object-cover rounded mb-3"
+                />
+              )}
 
               <div className="flex justify-between items-center mt-4 text-sm">
                 <button
