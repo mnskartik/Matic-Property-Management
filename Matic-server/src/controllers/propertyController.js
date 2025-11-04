@@ -1,5 +1,8 @@
 const Property = require('../models/Property');
-
+const fs = require("fs");
+const path = require("path");
+const Lead = require("../models/Lead");
+const Rental = require("../models/RentalReq");
 
 
 
